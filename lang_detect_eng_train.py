@@ -60,9 +60,12 @@ preprocessed_labels = [classification_map[lang] for lang in dataset['lang']]
 
 # Create model
 model = Sequential()
-model.add(Embedding(len(word_index) + 1, 64, input_length=max_sentence_length))
+model.add(Embedding(len(word_index) + 1, 32, input_length=max_sentence_length))
 # TODO: SpatialDropout?
 model.add(Convolution1D(filters=64, kernel_size=3, padding='valid', activation='relu'))
+model.add(MaxPooling1D(3))
+model.add(Dropout(0.1))
+model.add(Convolution1D(filters=32, kernel_size=2, padding='valid', activation='relu'))
 model.add(MaxPooling1D(3))
 model.add(Dropout(0.1))
 model.add(Flatten())
@@ -80,11 +83,11 @@ input_dim = preprocessed_texts.shape[1]
 print('input dim: {}'.format(input_dim))
 
 model.fit(x=preprocessed_texts, y=preprocessed_labels,
-          validation_split=0.4, epochs=5, batch_size=32, verbose=2)
+          validation_split=0.3, epochs=5, batch_size=64, verbose=0)
 # Epoch 5/5
 # 22s - loss: 0.0118 - acc: 0.9966 - val_loss: 0.1248 - val_acc: 0.9656
 
-model.save('lang-detect-eng-model.h5')
+model.save('lang-detect-eng-model-v3.h5')
 
 test_sentences = ['Ich bin Schmetterling!',
                   'I like trains',
@@ -103,18 +106,3 @@ predictions = model.predict(preprocessed_test_sentences)
 for i, p in enumerate(predictions):
     print(test_sentences[i])
     print(p)
-
-
-tweet_dataset_path = 'Twitter-Test-Dataset/tweets_1.csv'
-try:
-    tweet_dataset = pandas.read_csv(tweet_dataset_path, delimiter=' ', quotechar='|')
-    preprocessed_tweets = tokenizer.texts_to_sequences(tweet_dataset['Text'])
-    preprocessed_tweets = sequence.pad_sequences(preprocessed_tweets, maxlen=max_sentence_length)
-
-    predictions = model.predict(preprocessed_tweets, verbose=2)
-    for i, p in enumerate(predictions):
-        if p < 0.5:
-            print(tweet_dataset['Text'][i])
-            print(p)
-except Exception:
-    print('Twitter dataset {} not found.'.format(tweet_dataset_path))
