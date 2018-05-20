@@ -17,7 +17,7 @@ with open(tokenizer_path, 'rb') as tokenizer_file:
 tweet_dataset = pandas.read_csv(test_dataset_path, delimiter=' ', quotechar='|')
 
 preprocessed_tweets = tokenizer.texts_to_sequences(tweet_dataset['Text'])
-max_sentence_length = 1960
+max_sentence_length = 200
 preprocessed_tweets = sequence.pad_sequences(preprocessed_tweets, maxlen=max_sentence_length)
 
 predictions = model.predict(preprocessed_tweets, verbose=2)
